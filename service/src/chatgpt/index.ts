@@ -38,7 +38,7 @@ let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
       completionParams: {
         model: 'gpt-3.5-turbo',
       },
-      debug: false,
+      debug: true,
     }
 
     if (process.env.OPENAI_API_BASE_URL && process.env.OPENAI_API_BASE_URL.trim().length > 0)
