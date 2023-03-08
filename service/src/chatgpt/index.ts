@@ -7,6 +7,17 @@ import fetch from 'node-fetch'
 import { sendResponse } from '../utils'
 import type { ApiModel, ChatContext, ChatGPTUnofficialProxyAPIOptions, ModelConfig } from '../types'
 
+const ErrorCodeMessage: Record<string, string> = {
+  400: '[OpenAI] 模型的最大上下文长度是4096个令牌，请减少信息的长度。| This model\'s maximum context length is 4096 tokens.',
+  401: '[OpenAI] 提供错误的API密钥 | Incorrect API key provided',
+  403: '[OpenAI] 服务器拒绝访问，请稍后再试 | Server refused to access, please try again later',
+  429: '[OpenAI] 服务器限流，请稍后再试 | Server was limited, please try again later',
+  502: '[OpenAI] 错误的网关 |  Bad Gateway',
+  503: '[OpenAI] 服务器繁忙，请稍后再试 | Server is busy, please try again later',
+  504: '[OpenAI] 网关超时 | Gateway Time-out',
+  500: '[OpenAI] 服务器繁忙，请稍后再试 | Internal Server Error',
+}
+
 dotenv.config()
 
 const timeoutMs: number = !isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 30 * 1000
@@ -27,7 +38,7 @@ let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
       completionParams: {
         model: 'gpt-3.5-turbo',
       },
-      debug: true,
+      debug: false,
     }
 
     if (process.env.OPENAI_API_BASE_URL && process.env.OPENAI_API_BASE_URL.trim().length > 0)
@@ -70,28 +81,6 @@ let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
   }
 })()
 
-async function chatReply(
-  message: string,
-  lastContext?: { conversationId?: string; parentMessageId?: string },
-) {
-  if (!message)
-    return sendResponse({ type: 'Fail', message: 'Message is empty' })
-
-  try {
-    let options: SendMessageOptions = { timeoutMs }
-
-    if (lastContext)
-      options = { ...lastContext }
-
-    const response = await api.sendMessage(message, { ...options })
-
-    return sendResponse({ type: 'Success', data: response })
-  }
-  catch (error: any) {
-    return sendResponse({ type: 'Fail', message: error.message })
-  }
-}
-
 async function chatReplyProcess(
   message: string,
   lastContext?: { conversationId?: string; parentMessageId?: string },
@@ -103,8 +92,12 @@ async function chatReplyProcess(
   try {
     let options: SendMessageOptions = { timeoutMs }
 
-    if (lastContext)
-      options = { ...lastContext }
+    if (lastContext) {
+      if (apiModel === 'ChatGPTAPI')
+        options = { parentMessageId: lastContext.parentMessageId }
+      else
+        options = { ...lastContext }
+    }
 
     const response = await api.sendMessage(message, {
       ...options,
@@ -116,7 +109,11 @@ async function chatReplyProcess(
     return sendResponse({ type: 'Success', data: response })
   }
   catch (error: any) {
-    return sendResponse({ type: 'Fail', message: error.message })
+    const code = error.statusCode
+    global.console.log(error)
+    if (Reflect.has(ErrorCodeMessage, code))
+      return sendResponse({ type: 'Fail', message: ErrorCodeMessage[code] })
+    return sendResponse({ type: 'Fail', message: error.message ?? 'Please check the back-end console' })
   }
 }
 
@@ -134,4 +131,4 @@ async function chatConfig() {
 
 export type { ChatContext, ChatMessage }
 
-export { chatReply, chatReplyProcess, chatConfig }
+export { chatReplyProcess, chatConfig }
