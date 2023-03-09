@@ -15,8 +15,8 @@ export interface UserState {
 export function defaultSetting(): UserState {
   return {
     userInfo: {
-      avatar: '',
-      name: '522专用🥳',
+      avatar: 'https://vipyidiancom.oss-cn-beijing.aliyuncs.com/vipyidian.com/article/xuexiaologo120222981.jpg',
+      name: '祝师兄师姐毕业快乐，前途似锦🥳',
       description: '',
     },
   }
