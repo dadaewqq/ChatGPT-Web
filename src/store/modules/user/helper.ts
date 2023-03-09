@@ -17,7 +17,7 @@ export function defaultSetting(): UserState {
     userInfo: {
       avatar: 'https://vipyidiancom.oss-cn-beijing.aliyuncs.com/vipyidian.com/article/xuexiaologo120222981.jpg',
       name: '无名氏',
-      description: '祝师兄师姐毕业快乐，前途似锦🥳',
+      description: '祝各位毕业快乐，前途似锦🥳',
     },
   }
 }

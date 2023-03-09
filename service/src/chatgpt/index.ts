@@ -31,12 +31,15 @@ let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
   // More Info: https://github.com/transitive-bullshit/chatgpt-api
 
   if (process.env.OPENAI_API_KEY) {
+    const OPENAI_API_MODEL = process.env.OPENAI_API_MODEL
+    const model = (typeof OPENAI_API_MODEL === 'string' && OPENAI_API_MODEL.length > 0)
+      ? OPENAI_API_MODEL
+      : 'gpt-3.5-turbo'
+
     const options: ChatGPTAPIOptions = {
       apiKey: process.env.OPENAI_API_KEY,
-      completionParams: {
-        model: process.env.OPENAI_API_MODEL ?? 'gpt-3.5-turbo',
-      },
-      debug: true,
+      completionParams: { model },
+      debug: false,
     }
 
     if (process.env.OPENAI_API_BASE_URL && process.env.OPENAI_API_BASE_URL.trim().length > 0)
